@@ -1,47 +1,48 @@
---- eigen/Eigen/src/SparseCore/SparseMatrix.h	2015-02-18 12:57:58.890957211 +0100
-+++ eigen/Eigen/src/SparseCore/SparseMatrix.h	2015-02-18 13:13:34.022935551 +0100
-@@ -97,6 +97,27 @@
-       Options = _Options
-     };
+diff -wur a/eigen3/Eigen/src/SparseCore/SparseMatrix.h b/eigen3/Eigen/src/SparseCore/SparseMatrix.h
+--- a/eigen3/Eigen/src/SparseCore/SparseMatrix.h	2015-12-16 21:48:48.000000000 +0100
++++ b/eigen3/Eigen/src/SparseCore/SparseMatrix.h	2017-05-18 16:33:54.000000000 +0200
+@@ -116,6 +116,28 @@
  
+     typedef typename Base::IndexVector IndexVector;
+     typedef typename Base::ScalarVector ScalarVector;
++
 +    size_t n_rows, n_cols;
 +
 +    inline void zeros(const size_t rows, const size_t cols)
 +    {
-+        resize(rows, cols);
-+        n_rows = rows;
-+        n_cols = cols;
-+        setZero();
++      resize(rows, cols);
++      n_rows = rows;
++      n_cols = cols;
++      setZero();
 +    }
 +
 +    inline double& operator()(const size_t row, const size_t col)
 +    {
-+        return coeffRef(row, col);
++      return coeffRef(row, col);
 +    }
 +
 +    inline double operator()(const size_t row, const size_t col) const
 +    {
-+        return coeff(row, col);
++      return coeff(row, col);
 +    }
 +
 +
    protected:
- 
      typedef SparseMatrix<Scalar,(Flags&~RowMajorBit)|(IsRowMajor?RowMajorBit:0)> TransposedSparseMatrix;
-@@ -576,7 +597,11 @@
+
+@@ -587,7 +609,11 @@
  
        // Re-allocate outer index structure if necessary
        if (outerChange == 0)
--        return;
 +      {
-+          n_cols = this->cols();
-+          n_rows = this->rows();
-+          return;
++        n_cols = this->cols();
++        n_rows = this->rows();
+         return;
 +      }
            
-       Index *newOuterIndex = static_cast<Index*>(std::realloc(m_outerIndex, (m_outerSize + outerChange + 1) * sizeof(Index)));
+       StorageIndex *newOuterIndex = static_cast<StorageIndex*>(std::realloc(m_outerIndex, (m_outerSize + outerChange + 1) * sizeof(StorageIndex)));
        if (!newOuterIndex) internal::throw_std_bad_alloc();
-@@ -588,6 +613,8 @@
+@@ -599,6 +625,8 @@
            m_outerIndex[i] = last; 
        }
        m_outerSize += outerChange;
@@ -50,16 +51,16 @@
      }
      
      /** Resizes the matrix to a \a rows x \a cols matrix and initializes it to zero.
-@@ -612,6 +639,8 @@
+@@ -627,6 +655,8 @@
          m_innerNonZeros = 0;
        }
-       memset(m_outerIndex, 0, (m_outerSize+1)*sizeof(Index));
+       memset(m_outerIndex, 0, (m_outerSize+1)*sizeof(StorageIndex));
 +      n_rows = rows;
 +      n_cols = cols;
      }
  
      /** \internal
-@@ -631,6 +660,8 @@
+@@ -651,6 +681,8 @@
      {
        check_template_parameters();
        resize(0, 0);
@@ -68,7 +69,7 @@
      }
  
      /** Constructs a \a rows \c x \a cols empty matrix */
-@@ -639,6 +670,8 @@
+@@ -659,6 +691,8 @@
      {
        check_template_parameters();
        resize(rows, cols);
@@ -77,25 +78,25 @@
      }
  
      /** Constructs a sparse matrix from the sparse expression \a other */
-@@ -650,6 +683,8 @@
-         YOU_MIXED_DIFFERENT_NUMERIC_TYPES__YOU_NEED_TO_USE_THE_CAST_METHOD_OF_MATRIXBASE_TO_CAST_NUMERIC_TYPES_EXPLICITLY)
-       check_template_parameters();
-       *this = other.derived();
+@@ -679,6 +713,8 @@
+         #endif
+         internal::call_assignment_no_alias(*this, other.derived());
+       }
 +      n_rows = rows();
 +      n_cols = cols();
      }
      
      /** Constructs a sparse matrix from the sparse selfadjoint view \a other */
-@@ -659,6 +694,8 @@
+@@ -688,6 +724,8 @@
      {
        check_template_parameters();
-       *this = other;
+       Base::operator=(other);
 +      n_rows = rows();
 +      n_cols = cols();
      }
  
      /** Copy constructor (it performs a deep copy) */
-@@ -667,6 +704,8 @@
+@@ -696,6 +734,8 @@
      {
        check_template_parameters();
        *this = other.derived();
@@ -104,16 +105,16 @@
      }
  
      /** \brief Copy constructor with in-place evaluation */
-@@ -677,6 +716,8 @@
+@@ -706,6 +746,8 @@
        check_template_parameters();
        initAssignment(other);
        other.evalTo(*this);
 +      n_cols = cols();
 +      n_rows = rows();
      }
- 
-     /** Swaps the content of two sparse matrices of the same type.
-@@ -689,6 +730,9 @@
+
+     /** \brief Copy constructor with in-place evaluation */
+@@ -727,6 +769,9 @@
        std::swap(m_outerSize, other.m_outerSize);
        std::swap(m_innerNonZeros, other.m_innerNonZeros);
        m_data.swap(other.m_data);
@@ -122,8 +123,8 @@
 +      std::swap(n_cols, other.n_cols);
      }
  
-     /** Sets *this to the identity matrix */
-@@ -719,6 +763,8 @@
+     /** Sets *this to the identity matrix.
+@@ -763,6 +808,8 @@
            Base::operator=(other);
          }
        }

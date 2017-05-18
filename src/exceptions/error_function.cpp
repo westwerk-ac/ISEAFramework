@@ -26,6 +26,7 @@ _._._._._._._._._._._._._._._._._._._._._.*/
 // ETC
 #include "../misc/StrCont.h"
 #include "../observer/observerException.h"
+#include "../factory/factory.h"
 #include "../factory/exceptions/classnotfoundexception.h"
 #include "../factory/exceptions/nochildrenexception.h"
 #include "../factory/exceptions/classnotcachedexception.h"
